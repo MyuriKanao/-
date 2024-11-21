@@ -1,0 +1,225 @@
+body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: "Microsoft YaHei", sans-serif;
+}
+
+.container {
+    width: 100%;
+    max-width: 800px;
+    margin: 20px;
+    perspective: 1000px;
+}
+
+.pond {
+    position: relative;
+    width: 100%;
+    height: 500px;
+    background: linear-gradient(to bottom, #00b4db, #0083b0);
+    border-radius: 30px;
+    overflow: hidden;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+    transform-style: preserve-3d;
+    animation: pondFloat 6s ease-in-out infinite;
+}
+
+@keyframes pondFloat {
+    0%, 100% { transform: translateY(0) rotateX(2deg); }
+    50% { transform: translateY(-10px) rotateX(0deg); }
+}
+
+/* 水波纹效果 */
+.pond::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        radial-gradient(circle at 30% 30%, rgba(255,255,255,0.3) 0%, transparent 60%),
+        radial-gradient(circle at 70% 70%, rgba(255,255,255,0.3) 0%, transparent 60%);
+    filter: blur(2px);
+    animation: waterFlow 8s infinite linear;
+}
+
+.pond::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, 
+        rgba(255,255,255,0.1) 0%, 
+        rgba(255,255,255,0.05) 50%, 
+        transparent 100%);
+    animation: shimmer 3s infinite linear;
+}
+
+@keyframes waterFlow {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+@keyframes shimmer {
+    0% { opacity: 0.3; }
+    50% { opacity: 0.5; }
+    100% { opacity: 0.3; }
+}
+
+.wish-input {
+    padding: 15px 20px;
+    border: none;
+    border-radius: 25px;
+    background: rgba(255, 255, 255, 0.95);
+    font-size: 16px;
+    width: 250px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.wish-input:focus {
+    outline: none;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+.wish-button {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 18px 40px;
+    font-size: 20px;
+    background: linear-gradient(45deg, #FF6B6B, #FF8E8E);
+    color: white;
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 20px rgba(255,107,107,0.4);
+}
+
+.wish-button:hover {
+    transform: translateX(-50%) translateY(-3px);
+    box-shadow: 0 8px 25px rgba(255,107,107,0.5);
+    background: linear-gradient(45deg, #FF8E8E, #FFA5A5);
+}
+
+.wish-counter {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 12px 25px;
+    border-radius: 25px;
+    font-size: 16px;
+    color: #444;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    backdrop-filter: blur(5px);
+}
+
+.share-button {
+    position: absolute;
+    bottom: 30px;
+    right: 30px;
+    padding: 12px 25px;
+    background: linear-gradient(45deg, #4CAF50, #45a049);
+    color: white;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(76,175,80,0.3);
+}
+
+.share-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(76,175,80,0.4);
+}
+
+.wishes-list {
+    margin-top: 30px;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 25px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    backdrop-filter: blur(10px);
+}
+
+.wishes-list h3 {
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 1.5em;
+    text-align: center;
+}
+
+.wishes-list ul {
+    list-style: none;
+    padding: 0;
+}
+
+.wishes-list li {
+    padding: 15px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+.wishes-list li:hover {
+    background: rgba(255,255,255,0.5);
+    transform: translateX(5px);
+}
+
+.wishes-list li span {
+    color: #333;
+    font-size: 16px;
+}
+
+.wishes-list li small {
+    color: #666;
+    font-size: 14px;
+}
+
+/* 锦鲤动画优化 */
+.background-koi {
+    position: absolute;
+    width: 120px;
+    height: 80px;
+    background-image: url('../assets/koi.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    opacity: 0.8;
+    filter: blur(0.5px);
+    animation: swimAround 25s infinite ease-in-out;
+}
+
+@keyframes swimAround {
+    0% { transform: translate(-100px, 100px) rotate(0deg) scale(1); }
+    25% { transform: translate(300px, 200px) rotate(45deg) scale(1.2); }
+    50% { transform: translate(700px, 100px) rotate(0deg) scale(1); }
+    75% { transform: translate(300px, 300px) rotate(-45deg) scale(1.2); }
+    100% { transform: translate(-100px, 100px) rotate(0deg) scale(1); }
+}
+
+.koi {
+    position: absolute;
+    width: 80px;
+    height: 50px;
+    background-image: url('../assets/koi.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    filter: hue-rotate(var(--hue-rotate)) drop-shadow(0 0 10px rgba(255,255,255,0.5));
+    animation: koiGlow 1s infinite alternate;
+}
+
+@keyframes koiGlow {
+    from { filter: hue-rotate(var(--hue-rotate)) drop-shadow(0 0 10px rgba(255,255,255,0.5)); }
+    to { filter: hue-rotate(var(--hue-rotate)) drop-shadow(0 0 15px rgba(255,255,255,0.8)); }
+} 
