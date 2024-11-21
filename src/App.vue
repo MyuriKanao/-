@@ -51,10 +51,9 @@
           还没有人许愿呢，快来成为第一个吧！
         </div>
         <transition-group name="wish-list">
-          <div v-for="(wish, index) in wishes" 
+          <div v-for="wish in wishes" 
                :key="wish.id" 
-               class="wish-item"
-               :style="{ animationDelay: `${index * 0.1}s` }">
+               class="wish-item">
             <div class="wish-content">
               <span class="wish-text">{{ wish.text }}</span>
               <span class="wish-date">{{ wish.date }}</span>
@@ -71,11 +70,11 @@
         <span class="button-icon">{{ isBGMPlaying ? '🔊' : '🔈' }}</span>
       </button>
     </div>
-    <audio ref="wishSound" src="./sounds/wish-sound.mp3" preload="auto"></audio>
-    <audio ref="backgroundMusic" src="./sounds/peaceful-bgm.mp3" loop preload="auto"></audio>
-    <audio ref="successSound" src="./sounds/success-sound.mp3" preload="auto"></audio>
-    <audio ref="failSound" src="./sounds/fail-sound.mp3" preload="auto"></audio>
-    <audio ref="wishingSound" src="./sounds/wishing-sound.mp3" preload="auto"></audio>
+    <audio ref="wishSound" src="/sounds/wish-sound.mp3" preload="auto"></audio>
+    <audio ref="backgroundMusic" src="/sounds/peaceful-bgm.mp3" loop preload="auto"></audio>
+    <audio ref="successSound" src="/sounds/success-sound.mp3" preload="auto"></audio>
+    <audio ref="failSound" src="/sounds/fail-sound.mp3" preload="auto"></audio>
+    <audio ref="wishingSound" src="/sounds/wishing-sound.mp3" preload="auto"></audio>
     <div class="koi-animation" v-if="showKoiAnimation">
       <img
         src="@/assets/koi-appear.gif"
@@ -255,6 +254,7 @@ export default {
           date: new Date().toLocaleString()
         };
         
+        // 只保存到本地
         this.wishes.unshift(newWish);
         this.wishes = this.wishes.slice(0, 10);
         localStorage.setItem('wishes', JSON.stringify(this.wishes));
@@ -321,8 +321,9 @@ export default {
     hideKoiAnimation() {
       this.showKoiAnimation = false;
     },
-    deleteWish(wishId) {
+    async deleteWish(wishId) {
       if (confirm('确定要删除这个愿望吗？')) {
+        // 只从本地删除
         this.wishes = this.wishes.filter(wish => wish.id !== wishId);
         localStorage.setItem('wishes', JSON.stringify(this.wishes));
         
@@ -345,73 +346,40 @@ export default {
       if (this.isBGMPlaying) {
         this.playAudio('backgroundMusic');
       }
-    }
+    },
   },
   mounted() {
-    // 预加载所有音频
-    const audioRefs = ['wishSound', 'backgroundMusic', 'successSound', 'failSound', 'wishingSound'];
-    audioRefs.forEach(ref => {
-      const audio = this.$refs[ref];
-      if (audio) {
-        audio.load();
-        audio.addEventListener('error', (e) => {
-          console.log(`${ref} 加载失败:`, e);
-        });
-      }
-    });
-
-    // 添加自动播放背景音乐的逻辑
-    const startBackgroundMusic = async () => {
-      try {
-        const bgm = this.$refs.backgroundMusic;
-        if (bgm) {
-          // 设置音量渐入
-          bgm.volume = 0;
-          const playPromise = bgm.play();
-          if (playPromise !== undefined) {
-            await playPromise;
-            // 播放成功后，gradually 增加音量
-            let vol = 0;
-            const fadeIn = setInterval(() => {
-              if (vol < 1) {
-                vol += 0.1;
-                bgm.volume = vol;
-              } else {
-                clearInterval(fadeIn);
-              }
-            }, 100);
-            this.isBGMPlaying = true;
-          }
+    // 只保留音频初始化相关代码
+    const initAudio = () => {
+      const audioRefs = ['wishSound', 'backgroundMusic', 'successSound', 'failSound', 'wishingSound'];
+      audioRefs.forEach(ref => {
+        const audio = this.$refs[ref];
+        if (audio) {
+          audio.load();
+          audio.volume = 0.5;
         }
-      } catch (error) {
-        console.log("自动播放背景音乐失败:", error);
-        // 大多数浏览器需要用户交互才能自动播放，
-        // 如果自动播放失败，我们可以在用户第一次点击时播放
-        const startOnClick = () => {
-          this.toggleBGM();
-          document.removeEventListener('click', startOnClick);
-        };
-        document.addEventListener('click', startOnClick);
+      });
+    };
+
+    const handleFirstInteraction = () => {
+      initAudio();
+      this.showMusicTip = false;
+      document.removeEventListener('click', handleFirstInteraction);
+      document.removeEventListener('touchstart', handleFirstInteraction);
+      
+      const bgm = this.$refs.backgroundMusic;
+      if (bgm) {
+        bgm.play().then(() => {
+          this.isBGMPlaying = true;
+        }).catch(error => {
+          console.log('背景音乐播放失败:', error);
+        });
       }
     };
 
-    // 启动背景音乐
-    startBackgroundMusic();
-
-    // 显示音乐提示
-    if (this.showMusicTip) {
-      const tip = document.createElement('div');
-      tip.className = 'music-tip';
-      tip.innerHTML = '点击任意处开始播放背景音乐 🎵';
-      document.body.appendChild(tip);
-      
-      // 5秒后自动隐藏提示
-      setTimeout(() => {
-        tip.style.opacity = '0';
-        setTimeout(() => tip.remove(), 500);
-        this.showMusicTip = false;
-      }, 5000);
-    }
+    document.addEventListener('click', handleFirstInteraction);
+    document.addEventListener('touchstart', handleFirstInteraction);
+    this.showMusicTip = true;
   }
 };
 </script>
@@ -421,6 +389,8 @@ export default {
   max-width: 800px;
   margin: 0 auto;
   padding: 20px;
+  min-height: 100vh;
+  box-sizing: border-box;
 }
 
 .pond {
@@ -509,10 +479,14 @@ export default {
 .wish-panel {
   position: relative;
   z-index: 1;
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.6);
   padding: 20px;
   border-radius: 10px;
   margin-bottom: 20px;
+  box-sizing: border-box;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
 .wish-input {
@@ -521,6 +495,15 @@ export default {
   border: 2px solid #4a90e2;
   border-radius: 5px;
   margin-bottom: 10px;
+  box-sizing: border-box;
+  font-size: 16px;
+  outline: none;
+  transition: border-color 0.3s ease;
+}
+
+.wish-input:focus {
+  border-color: #357abd;
+  box-shadow: 0 0 5px rgba(74, 144, 226, 0.3);
 }
 
 .wish-btn, .share-button {
@@ -550,59 +533,6 @@ export default {
   opacity: 0.7;
   cursor: not-allowed;
   transform: none;
-}
-
-.wishes-list {
-  margin-top: 20px;
-  background: white;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-.wishes-list ul {
-  list-style: none;
-  padding: 0;
-}
-
-.wishes-list li {
-  padding: 10px;
-  border-bottom: 1px solid #eee;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-/* 水波纹效果 */
-.pond::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(
-    45deg,
-    rgba(255, 255, 255, 0.1) 25%,
-    transparent 25%,
-    transparent 50%,
-    rgba(255, 255, 255, 0.1) 50%,
-    rgba(255, 255, 255, 0.1) 75%,
-    transparent 75%,
-    transparent
-  );
-  background-size: 30px 30px;
-  animation: water-pattern 3s linear infinite;
-  opacity: 0.5;
-}
-
-@keyframes water-pattern {
-  0% {
-    background-position: 0 0;
-  }
-  100% {
-    background-position: 60px 60px;
-  }
 }
 
 .koi-animation {
@@ -650,11 +580,11 @@ export default {
 }
 
 .title {
-  color: #fff;
+  color: #333;
   text-align: center;
   font-size: 2em;
   margin-bottom: 20px;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+  text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.5);
 }
 
 .button-group {
@@ -668,45 +598,10 @@ export default {
   font-size: 1.2em;
 }
 
-.wishes-container {
-  max-height: 300px;
-  overflow-y: auto;
-  padding: 10px;
-}
-
-.wish-item {
-  background: white;
-  border-radius: 10px;
-  padding: 15px;
-  margin-bottom: 10px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-  animation: slideIn 0.5s ease-out forwards;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.wish-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.wish-text {
-  font-size: 1.1em;
-  color: #333;
-}
-
-.wish-date {
-  font-size: 0.8em;
-  color: #666;
-}
-
 .audio-controls {
   position: fixed;
   bottom: 20px;
-  right: 20px;
+  right: max(20px, calc((100% - 800px) / 2 + 20px));
   z-index: 1000;
 }
 
@@ -723,17 +618,6 @@ export default {
 
 .audio-button:hover {
   transform: scale(1.1);
-}
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 .shake {
@@ -768,36 +652,6 @@ export default {
 
 .delete-btn .button-icon {
   font-size: 1.2em;
-}
-
-/* 添加删除动画 */
-.wish-list-leave-active {
-  position: absolute;
-  width: 100%;
-  transition: all 0.5s ease;
-}
-
-.wish-list-leave-to {
-  opacity: 0;
-  transform: translateX(30px);
-}
-
-/* 添加响应式设计 */
-@media (max-width: 768px) {
-  .container {
-    padding: 10px;
-  }
-  
-  .button-group {
-    flex-direction: column;
-  }
-  
-  .wish-btn, .share-button {
-    width: 100%;
-  }
-  .delete-btn {
-    padding: 12px;
-  }
 }
 
 .result-modal {
@@ -908,12 +762,127 @@ export default {
   top: 20px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.8);
   color: white;
-  padding: 10px 20px;
+  padding: 12px 24px;
   border-radius: 20px;
-  font-size: 0.9em;
+  font-size: 1em;
   z-index: 1000;
   transition: opacity 0.5s;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.music-tip::before {
+  content: '🎵';
+  font-size: 1.2em;
+}
+
+.wish-counter {
+  color: #333;
+  font-weight: 500;
+  text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.5);
+}
+
+.wishes-list {
+  margin-top: 20px;
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  margin-bottom: 60px;
+}
+
+.wishes-container {
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 10px;
+  scrollbar-width: thin;
+  scrollbar-color: #4a90e2 #f0f0f0;
+}
+
+.wishes-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.wishes-container::-webkit-scrollbar-track {
+  background: #f0f0f0;
+  border-radius: 4px;
+}
+
+.wishes-container::-webkit-scrollbar-thumb {
+  background: #4a90e2;
+  border-radius: 4px;
+}
+
+.wish-item {
+  background: white;
+  border-radius: 10px;
+  padding: 15px;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  animation: slideIn 0.5s ease-out forwards;
+}
+
+.wish-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.wish-text {
+  font-size: 1.1em;
+  color: #333;
+}
+
+.wish-date {
+  font-size: 0.8em;
+  color: #666;
+}
+
+.no-wishes {
+  text-align: center;
+  color: #666;
+  padding: 20px;
+}
+
+.list-icon {
+  margin-right: 8px;
+}
+
+/* 添加愿望列表的动画 */
+.wish-list-enter-active,
+.wish-list-leave-active {
+  transition: all 0.5s ease;
+}
+
+.wish-list-enter-from {
+  opacity: 0;
+  transform: translateY(30px);
+}
+
+.wish-list-leave-to {
+  opacity: 0;
+  transform: translateX(30px);
+}
+
+@media (max-width: 768px) {
+  .wishes-list {
+    margin: 10px 0 60px 0;
+  }
+  
+  .wish-item {
+    padding: 12px;
+  }
+  
+  .wish-text {
+    font-size: 1em;
+  }
 }
 </style>
