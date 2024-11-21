@@ -92,6 +92,17 @@
     <div class="music-tip" v-if="showMusicTip">
       点击任意处开始播放背景音乐 🎵
     </div>
+    <div class="author-info">
+      <div class="author-koi-container">
+        <div class="author-koi left"></div>
+        <div class="author-koi right"></div>
+      </div>
+      <div class="author-content">
+        <span>Created by</span>
+        <h3>MayuriKano</h3>
+        <p>愿锦鲤护佑着每一个美好的愿望 ✨</p>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -110,18 +121,171 @@ export default {
       isWishSuccess: false,
       resultMessage: '',
       wishProbabilities: {
-        '发财': 30,
-        '健康': 70,
-        '学习': 60,
-        '爱情': 40,
-        '事业': 50,
-        '考试': 55,
-        '升职': 35,
-        '减肥': 45,
-        '旅行': 65,
-        '其他': 50
+        '发财': 5,
+        '健康': 15,
+        '学习': 10,
+        '爱情': 7,
+        '事业': 8,
+        '考试': 10,
+        '升职': 5,
+        '减肥': 7,
+        '旅行': 12,
+        '其他': 5
       },
       showMusicTip: true,
+      failureEvents: [
+        {
+          text: "锦鲤在打盹...",
+          emoji: "😴"
+        },
+        {
+          text: "锦鲤游得有点累...",
+          emoji: "🥱"
+        },
+        {
+          text: "时机未到...",
+          emoji: "🎋"
+        },
+        {
+          text: "需要积攒运气~",
+          emoji: "✨"
+        },
+        {
+          text: "再等等...",
+          emoji: "🌟"
+        },
+        {
+          text: "锦鲤在蓄力！",
+          emoji: "💫"
+        },
+        {
+          text: "调整心态~",
+          emoji: "🙏"
+        },
+        {
+          text: "星座运势不佳...",
+          emoji: "⭐"
+        },
+        {
+          text: "时机不成熟...",
+          emoji: "🌊"
+        },
+        {
+          text: "锦鲤在修炼~",
+          emoji: "💪"
+        },
+        {
+          text: "月相不佳...",
+          emoji: "🌙"
+        },
+        {
+          text: "遇到小伙伴去玩了~",
+          emoji: "🐟"
+        },
+        {
+          text: "去积德了...",
+          emoji: "🏮"
+        },
+        {
+          text: "姿势不对~",
+          emoji: "🤔"
+        },
+        {
+          text: "耐心等待...",
+          emoji: "⏳"
+        },
+        {
+          text: "赴约去了~",
+          emoji: "🚶"
+        },
+        {
+          text: "运势低迷...",
+          emoji: "🏺"
+        },
+        {
+          text: "云遮月...",
+          emoji: "☁️"
+        },
+        {
+          text: "吉时未到...",
+          emoji: "⌛"
+        },
+        {
+          text: "缘分未至...",
+          emoji: "🎭"
+        }
+      ],
+      luckyEvents: [
+        {
+          text: "锦鲤感受到了你的诚意！",
+          emoji: "✨",
+          bonus: 10
+        },
+        {
+          text: "今天的星座运势特别好！",
+          emoji: "⭐",
+          bonus: 15
+        },
+        {
+          text: "锦鲤今天心情不错~",
+          emoji: "🌟",
+          bonus: 8
+        },
+        {
+          text: "一道金光闪过！",
+          emoji: "🌈",
+          bonus: 20
+        },
+        {
+          text: "锦鲤说你的愿望很纯粹！",
+          emoji: "💫",
+          bonus: 12
+        },
+        {
+          text: "月老路过，为你加持！",
+          emoji: "❤️",
+          bonus: 15
+        },
+        {
+          text: "观音显灵！",
+          emoji: "🙏",
+          bonus: 25
+        },
+        {
+          text: "福星高照！",
+          emoji: "🌟",
+          bonus: 18
+        },
+        {
+          text: "锦鲤与你心有灵犀~",
+          emoji: "💝",
+          bonus: 13
+        },
+        {
+          text: "祥云环绕！",
+          emoji: "☁️",
+          bonus: 10
+        },
+        {
+          text: "文昌帝君显灵！",
+          emoji: "📚",
+          bonus: 22
+        },
+        {
+          text: "财神爷路过~",
+          emoji: "💰",
+          bonus: 20
+        },
+        {
+          text: "遇到吉时！",
+          emoji: "⏰",
+          bonus: 15
+        }
+      ],
+      eventChances: {
+        lucky: 10,    // 降低到10%概率触发幸运事件
+        failure: 45   // 提高到45%概率触发失败事件
+      }
     };
   },
   methods: {
@@ -169,8 +333,8 @@ export default {
       animation.onfinish = () => koi.remove();
     },
     calculateWishProbability(wishText) {
-      // 根据愿望内容计算基础概率
-      let baseProb = 50; // 默认基础概率
+      // 降低基础概率
+      let baseProb = 5;  // 默认基础概率从25降到5
       
       for (const [keyword, prob] of Object.entries(this.wishProbabilities)) {
         if (wishText.includes(keyword)) {
@@ -179,7 +343,7 @@ export default {
         }
       }
       
-      // 加上幸运值加成
+      // 幸运值加成保持不变
       return Math.min(baseProb + this.currentLuck, 100);
     },
     playAudio(audioRef) {
@@ -209,6 +373,29 @@ export default {
         console.log(`停止${audioRef}出错:`, error);
       }
     },
+    getRandomFailureEvent() {
+      const randomIndex = Math.floor(Math.random() * this.failureEvents.length);
+      return this.failureEvents[randomIndex];
+    },
+    getRandomEvent() {
+      const rand = Math.random() * 100;
+      if (rand < this.eventChances.lucky) {
+        // 触发幸运事件
+        const randomIndex = Math.floor(Math.random() * this.luckyEvents.length);
+        return {
+          type: 'lucky',
+          ...this.luckyEvents[randomIndex]
+        };
+      } else if (rand < (this.eventChances.lucky + this.eventChances.failure)) {
+        // 触发失败事件
+        const randomIndex = Math.floor(Math.random() * this.failureEvents.length);
+        return {
+          type: 'failure',
+          ...this.failureEvents[randomIndex]
+        };
+      }
+      return null; // 没有触发任何事件
+    },
     async makeWish() {
       const wishBtn = this.$refs.wishBtn;
       if (!wishBtn) return;
@@ -227,23 +414,48 @@ export default {
         return;
       }
 
-      // 播放许愿中的音效
-      this.stopAudio('backgroundMusic');
+      // 不停止背景音乐，只调整音量
+      if (this.isBGMPlaying) {
+        const bgm = this.$refs.backgroundMusic;
+        if (bgm) {
+          // 渐变降低背景音乐音量
+          const fadeOut = setInterval(() => {
+            if (bgm.volume > 0.1) {
+              bgm.volume -= 0.1;
+            } else {
+              clearInterval(fadeOut);
+              bgm.volume = 0.1;
+            }
+          }, 100);
+        }
+      }
+
+      // 播放许愿音效
       this.playAudio('wishingSound');
 
       // 模拟许愿过程的延迟
       await new Promise(resolve => setTimeout(resolve, 2000));
 
-      const probability = this.calculateWishProbability(this.wishText);
+      const event = this.getRandomEvent();
+      let eventBonus = 0;
+      
+      if (event) {
+        if (event.type === 'lucky') {
+          eventBonus = event.bonus;
+          this.resultMessage = `${event.emoji} ${event.text}\n\n额外获得${event.bonus}%成功率加成！`;
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+      }
+
+      const probability = this.calculateWishProbability(this.wishText) + eventBonus;
       const isSuccess = Math.random() * 100 <= probability;
       
       this.isWishSuccess = isSuccess;
       
-      // 停止许愿中的音效
+      // 停止许愿音效
       this.stopAudio('wishingSound');
       
       if (isSuccess) {
-        // 祈愿成功音效
         this.playAudio('successSound');
         this.resultMessage = '恭喜！锦鲤眷顾了你！';
         this.showKoiAnimation = true;
@@ -266,20 +478,35 @@ export default {
         this.createKois();
         this.wishText = '';
       } else {
-        // 祈愿失败音效
         this.playAudio('failSound');
-        this.currentLuck += 10;
-        this.resultMessage = `祈愿失败...但是你获得了10%幸运值加成！\n当前成功率: ${probability}%\n再试一次吧！`;
+        this.currentLuck += 5;
+        
+        if (event && event.type === 'failure') {
+          this.resultMessage = `${event.emoji} ${event.text}\n\n但是你获得了5%幸运值加成！\n当前成功率: ${probability}%\n再试一次吧！`;
+        } else {
+          this.resultMessage = `祈愿失败...\n但是你获得了5%幸运值加成！\n当前成功率: ${probability}%\n再试一次吧！`;
+        }
       }
       
       this.showResult = true;
 
-      // 3秒后恢复背景音乐
-      setTimeout(() => {
-        if (this.isBGMPlaying) {
-          this.playAudio('backgroundMusic');
-        }
-      }, 3000);
+      // 3秒后恢复背景音乐音量
+      if (this.isBGMPlaying) {
+        setTimeout(() => {
+          const bgm = this.$refs.backgroundMusic;
+          if (bgm) {
+            // 渐变恢复背景音乐音量
+            const fadeIn = setInterval(() => {
+              if (bgm.volume < 0.5) {
+                bgm.volume += 0.1;
+              } else {
+                clearInterval(fadeIn);
+                bgm.volume = 0.5;
+              }
+            }, 100);
+          }
+        }, 3000);
+      }
     },
     toggleBGM() {
       try {
@@ -322,7 +549,7 @@ export default {
       this.showKoiAnimation = false;
     },
     async deleteWish(wishId) {
-      if (confirm('确定要删除这个愿望吗？')) {
+      if (confirm('确定要删这个愿望吗？')) {
         // 只从本地删除
         this.wishes = this.wishes.filter(wish => wish.id !== wishId);
         localStorage.setItem('wishes', JSON.stringify(this.wishes));
@@ -338,13 +565,25 @@ export default {
       if (wishBtn) {
         wishBtn.classList.remove('disabled');
       }
+      
       if (!this.isWishSuccess) {
         this.$refs.wishInput?.focus();
-      }
-      
-      // 恢复背景音乐
-      if (this.isBGMPlaying) {
-        this.playAudio('backgroundMusic');
+        
+        // 如果背景音乐正在播放，确保音量渐变复
+        if (this.isBGMPlaying) {
+          const bgm = this.$refs.backgroundMusic;
+          if (bgm) {
+            // 渐变恢复背景音乐音量
+            const fadeIn = setInterval(() => {
+              if (bgm.volume < 0.5) {
+                bgm.volume += 0.1;
+              } else {
+                clearInterval(fadeIn);
+                bgm.volume = 0.5;
+              }
+            }, 100);
+          }
+        }
       }
     },
   },
@@ -391,14 +630,17 @@ export default {
   padding: 20px;
   min-height: 100vh;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .pond {
+  background: linear-gradient(180deg, #ff6b6b, #4a90e2);
   position: relative;
-  background: linear-gradient(180deg, #4a90e2, #357abd);
+  overflow: hidden;
   border-radius: 15px;
   min-height: 400px;
-  overflow: hidden;
   padding: 20px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
@@ -580,11 +822,14 @@ export default {
 }
 
 .title {
-  color: #333;
+  background: linear-gradient(45deg, #ff6b6b, #ffd93d);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: titleGlow 2s ease-in-out infinite;
+  font-weight: bold;
+  font-size: 2.5em;
+  margin-bottom: 30px;
   text-align: center;
-  font-size: 2em;
-  margin-bottom: 20px;
-  text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.5);
 }
 
 .button-group {
@@ -883,6 +1128,286 @@ export default {
   
   .wish-text {
     font-size: 1em;
+  }
+}
+
+/* 添加祥云背景 */
+.pond::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('@/assets/cloud-pattern.svg') repeat;
+  opacity: 0.15;
+  animation: cloudMove 30s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes cloudMove {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 1000px 1000px;
+  }
+}
+
+/* 添加闪光效果 */
+.wish-panel {
+  position: relative;
+  overflow: hidden;
+}
+
+.wish-panel::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  animation: shimmer 3s infinite;
+  transform: rotate(30deg);
+}
+
+/* 祈愿按钮特效 */
+.wish-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.wish-btn::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: rotate(30deg);
+  animation: buttonShimmer 2s infinite;
+}
+
+/* 愿望列表项悬浮效果 */
+.wish-item {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.wish-item:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+}
+
+/* 添加动画关键帧 */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%) rotate(30deg);
+  }
+  100% {
+    transform: translateX(100%) rotate(30deg);
+  }
+}
+
+@keyframes buttonShimmer {
+  0% {
+    transform: translateX(-100%) rotate(30deg);
+  }
+  100% {
+    transform: translateX(100%) rotate(30deg);
+  }
+}
+
+/* 添加锦鲤跳动动画 */
+.koi {
+  animation: koiJump 0.5s ease-out;
+}
+
+@keyframes koiJump {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-30px) scale(1.2);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* 修改标题样式 */
+.title {
+  background: linear-gradient(45deg, #ff6b6b, #ffd93d);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: titleGlow 2s ease-in-out infinite;
+  font-weight: bold;
+}
+
+@keyframes titleGlow {
+  0%, 100% {
+    filter: drop-shadow(0 0 5px rgba(255, 107, 107, 0.5));
+  }
+  50% {
+    filter: drop-shadow(0 0 10px rgba(255, 217, 61, 0.7));
+  }
+}
+
+/* 添加祝福文字装饰 */
+.wish-counter::before {
+  content: '✨';
+  margin-right: 5px;
+}
+
+.wish-counter::after {
+  content: '✨';
+  margin-left: 5px;
+}
+
+/* 优化结果弹窗 */
+.result-modal .result-content {
+  transform-style: preserve-3d;
+  animation: modalPop 0.5s ease-out;
+}
+
+@keyframes modalPop {
+  0% {
+    transform: scale(0.5) rotateX(-45deg);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1) rotateX(0);
+    opacity: 1;
+  }
+}
+
+/* 添加响应式调整 */
+@media (max-width: 768px) {
+  .container::before,
+  .container::after {
+    width: 60px;
+    height: 72px;
+  }
+}
+
+/* 添加作者信息相关样式 */
+.author-info {
+  position: relative;
+  text-align: center;
+  padding: 20px;
+  margin-top: auto;
+  margin-bottom: 40px;
+}
+
+.author-content {
+  background: rgba(255, 255, 255, 0.9);
+  padding: 15px 30px;
+  border-radius: 15px;
+  display: inline-block;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(5px);
+  position: relative;
+  z-index: 1;
+}
+
+.author-content span {
+  color: #666;
+  font-size: 0.9em;
+}
+
+.author-content h3 {
+  margin: 5px 0;
+  background: linear-gradient(45deg, #4a90e2, #357abd);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-size: 1.5em;
+}
+
+.author-content p {
+  margin: 5px 0 0;
+  color: #666;
+  font-size: 0.9em;
+}
+
+.author-koi-container {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+.author-koi {
+  position: absolute;
+  width: 60px;
+  height: 36px;
+  background: url("@/assets/koi.svg") no-repeat;
+  background-size: contain;
+  opacity: 0.8;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.author-koi.left {
+  left: 10%;
+  filter: hue-rotate(45deg);
+  animation: swimLeft 4s ease-in-out infinite;
+}
+
+.author-koi.right {
+  right: 10%;
+  transform: translateY(-50%) scaleX(-1);
+  filter: hue-rotate(180deg);
+  animation: swimRight 4s ease-in-out infinite;
+}
+
+@keyframes swimLeft {
+  0%, 100% {
+    transform: translateY(-50%) rotate(-5deg);
+  }
+  50% {
+    transform: translateY(-50%) rotate(5deg) translateX(20px);
+  }
+}
+
+@keyframes swimRight {
+  0%, 100% {
+    transform: translateY(-50%) scaleX(-1) rotate(-5deg);
+  }
+  50% {
+    transform: translateY(-50%) scaleX(-1) rotate(5deg) translateX(-20px);
+  }
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .author-info {
+    margin-bottom: 60px;
+  }
+  
+  .author-koi {
+    width: 40px;
+    height: 24px;
+  }
+  
+  .author-koi.left {
+    left: 5%;
+  }
+  
+  .author-koi.right {
+    right: 5%;
   }
 }
 </style>
